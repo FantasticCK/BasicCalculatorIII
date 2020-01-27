@@ -1,11 +1,13 @@
 package com.CK;
 
+import java.util.ArrayDeque;
+import java.util.Queue;
 import java.util.Stack;
 
 public class Main {
 
     public static void main(String[] args) {
-        String s = "-1+4*3/(3/3)";
+        String s = "2*(5+5*2)/3+(6/2+8)";
 //        String s = "0-2147483648";
         Solution solution = new Solution();
         System.out.println(solution.calculate(s));
@@ -14,7 +16,7 @@ public class Main {
 
 
 //Shunting-yard algorithm - > RPN
-class Solution {
+class Solution2 {
     int getPrecedence(char c) {
         if (c == '+' || c == '-') return 2;
         else if (c == '*' || c == '/') return 3;
@@ -28,7 +30,7 @@ class Solution {
             char c = s.charAt(i);
             if (c == ' ') continue;
             if (c == '-') {
-                if (i==0) {
+                if (i == 0) {
                     sb.append('-');
                     continue;
                 }
@@ -90,5 +92,54 @@ class Solution {
     public int calculate(String s) {
         if (s.equals("0-2147483648")) return Integer.MIN_VALUE;
         return solveRPN(getRPN(s));
+    }
+}
+
+class Solution {
+    public int calculate(String s) {
+        return dfs(s + "$", new int[]{-1});
+    }
+
+    private int dfs(String s, int[] st) {
+        if (st[0] >= s.length())
+            return 0;
+        int currNum = 0, prevNum = 0, sum = 0;
+        char prevOpt = '+';
+
+        while (++st[0] < s.length()) {
+            char c = s.charAt(st[0]);
+            if (c == ' ')
+                continue;
+            if (c >= '0' && c <= '9') {
+                currNum = currNum * 10 + c - '0';
+            } else if (c == '(') {
+                currNum = dfs(s, st);
+            } else {
+                switch (prevOpt) {
+                    case '+':
+                        sum += prevNum;
+                        prevNum = currNum;
+                        break;
+
+                    case '-':
+                        sum += prevNum;
+                        prevNum = -currNum;
+                        break;
+
+                    case '*':
+                        prevNum *= currNum;
+                        break;
+
+                    case '/':
+                        prevNum /= currNum;
+                        break;
+                }
+
+                if (c == ')') break;
+                prevOpt = c;
+                currNum = 0;
+            }
+        }
+        return sum + prevNum;
     }
 }
